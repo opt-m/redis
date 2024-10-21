@@ -241,10 +241,11 @@ void sortCommandGeneric(client *c, int readonly) {
         } else if (!strcasecmp(c->argv[j]->ptr,"get") && leftargs >= 1) {
             /* If GET is specified with a real pattern, we can't accept it in cluster mode,
              * unless we can make sure the keys formed by the pattern are in the same slot 
-             * as the key to sort. */
+             * as the key to sort. The pattern # represents the key itself, so just skip
+             * pattern slot check. */
             if (server.cluster_enabled &&
-                patternHashSlot(c->argv[j+1]->ptr, sdslen(c->argv[j+1]->ptr)) != getKeySlot(c->argv[1]->ptr) &&
-                strcmp(c->argv[j+1]->ptr, "#"))
+                strcmp(c->argv[j+1]->ptr, "#") &&
+                patternHashSlot(c->argv[j+1]->ptr, sdslen(c->argv[j+1]->ptr)) != getKeySlot(c->argv[1]->ptr))
             {
                 addReplyError(c, "GET option of SORT denied in Cluster mode when "
                               "keys formed by the pattern may be in different slots.");
